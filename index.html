@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Calma Galáctica</title>
+<style>
+  :root{--bg:#0f1733;--card:#1f2b5c;--txt:#fff;--sol:#ffd166;--verde:#6ee7a8;--acento:#8fd3ff}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html{background:var(--bg)}
+  body{margin:0;font-family:"Segoe UI",Arial,sans-serif;background:radial-gradient(circle at 30% 0%,#2a3a80,var(--bg) 65%) fixed;color:var(--txt);min-height:100vh;display:flex;justify-content:center}
+  .app{width:100%;max-width:480px;padding:12px 16px 24px;display:flex;flex-direction:column;min-height:100vh}
+  .barra{display:flex;justify-content:space-between;align-items:center;gap:8px;position:sticky;top:0;z-index:5;padding:6px 0;background:linear-gradient(var(--bg) 70%,transparent)}
+  .redondo{width:56px;height:56px;border-radius:50%;border:3px solid transparent;background:var(--card);font-size:27px;cursor:pointer;color:#fff;position:relative;flex:none}
+  .redondo.on{border-color:var(--verde);background:#1e4a3c}
+  .redondo .marca{position:absolute;right:-4px;top:-4px;font-size:13px;width:22px;height:22px;line-height:22px;border-radius:50%;background:#a33}
+  .redondo.on .marca{background:#1f8a5a}
+  .titulo{font-size:17px;font-weight:700;opacity:.9;text-align:center;flex:1}
+  .pantalla{display:none;flex:1;flex-direction:column}
+  .pantalla.on{display:flex}
+  .pregunta{font-size:32px;font-weight:800;text-align:center;margin:12px 0 4px;line-height:1.15}
+  .bajada{font-size:19px;text-align:center;opacity:.85;margin-bottom:6px}
+  .rejilla{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+  .rejilla.tres{grid-template-columns:1fr 1fr 1fr}
+  .boton{border:0;border-radius:24px;background:var(--card);color:#fff;cursor:pointer;padding:14px 8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-height:120px;font-size:21px;font-weight:700}
+  .boton .e{font-size:54px;line-height:1}
+  .boton:active{transform:scale(.97)}
+  .boton:focus-visible,.boton.sel{outline:5px solid var(--sol)}
+  .act{flex-direction:row;justify-content:flex-start;gap:16px;min-height:96px;padding:14px 18px;font-size:23px;text-align:left;width:100%;margin-top:12px}
+  .act .e{font-size:50px}
+  .act small{display:block;font-size:16px;font-weight:400;opacity:.85;margin-top:2px}
+  .act.top{background:var(--sol);color:#1a1a1a}
+  .act.top small{opacity:.8}
+  .estrella{font-size:15px;font-weight:800;background:#1a1a1a;color:var(--sol);border-radius:10px;padding:2px 8px;display:inline-block;margin-bottom:4px}
+  .ir{background:var(--sol);color:#1a1a1a;font-size:28px;min-height:90px;border-radius:24px;border:0;font-weight:800;margin-top:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:12px;width:100%}
+  .ir .e{font-size:38px}
+  .sec{background:var(--card);color:#fff;font-size:22px;min-height:70px}
+  .escena{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+  .globo{width:190px;height:190px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#d6f0ff,#4f8fe8);display:flex;align-items:center;justify-content:center;font-size:84px;transform:scale(.75);transition-property:transform;transition-timing-function:ease-in-out;box-shadow:0 0 60px rgba(143,211,255,.35)}
+  .gigante{font-size:120px;line-height:1.1}
+  .orden{display:flex;align-items:center;justify-content:center;gap:12px;font-size:36px;font-weight:800;margin-top:22px;min-height:56px;color:var(--sol)}
+  .orden .e{font-size:46px}
+  .numero{font-size:70px;font-weight:900;min-height:80px;line-height:1}
+  .cuentas{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:8px}
+  .cuenta{width:34px;height:34px;border-radius:50%;background:#2c3a78;border:3px solid #6b7cc0;transition:all .4s}
+  .cuenta.ok{background:var(--sol);border-color:var(--sol)}
+  .reloj{width:90px;height:150px;position:relative;margin:8px auto 0}
+  .reloj .marco{position:absolute;inset:0;border:5px solid #c9d2ff;border-radius:24px}
+  .reloj .arriba,.reloj .abajo{position:absolute;left:14px;width:62px;background:#f0c96b;transition:height 1s linear}
+  .reloj .arriba{top:12px;height:58px;border-radius:0 0 30px 30px}
+  .reloj .abajo{bottom:12px;height:0;border-radius:30px 30px 0 0}
+  .progreso{width:100%;height:16px;background:#2c3a78;border-radius:10px;overflow:hidden;margin-top:16px}
+  .progreso div{height:100%;width:0;background:var(--verde);transition:width 1s linear}
+  .puntos{display:flex;gap:10px;justify-content:center;margin:14px 0}
+  .punto{width:30px;height:30px;border-radius:50%;border:3px solid #6b7cc0;background:#2c3a78;cursor:pointer}
+  .punto.ok{background:var(--verde);border-color:var(--verde)}
+  .pasos{display:flex;flex-direction:column;gap:10px;margin-top:8px}
+  .paso{display:flex;align-items:center;gap:14px;background:var(--card);border-radius:20px;padding:12px 16px;font-size:22px;font-weight:700;transition:all .3s}
+  .paso .e{font-size:42px;min-width:92px;text-align:center;white-space:nowrap}
+  .paso.ahora{outline:4px solid var(--sol)}
+  .paso.hecho{opacity:.4}
+  input{width:100%;font-size:22px;padding:14px;border-radius:16px;border:0;margin:6px 0}
+  .aviso{background:#3d2b55;border-radius:18px;padding:14px 16px;font-size:19px;display:flex;gap:12px;align-items:center;margin-top:12px;text-align:left}
+  .aviso .e{font-size:36px}
+  .frase{background:var(--card);border-radius:24px;padding:24px 18px;font-size:27px;font-weight:700;text-align:center;margin-top:10px;min-height:150px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px}
+  .frase .e{font-size:58px}
+  .pie{margin-top:auto;padding-top:16px;font-size:13px;opacity:.7;text-align:center}
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- barra fija: siempre se puede activar sonido y vibración -->
+  <div class="barra">
+    <button class="redondo" onclick="ir('inicio')" aria-label="Inicio">🏠</button>
+    <button class="redondo" id="t-son" onclick="alternar('son')" aria-label="Sonido">🔇<span class="marca">✖</span></button>
+    <span class="titulo">🌌 Calma<br>Galáctica</span>
+    <button class="redondo" id="t-vib" onclick="alternar('vib')" aria-label="Vibración">📴<span class="marca">✖</span></button>
+    <button class="redondo" onclick="ir('ayuda')" aria-label="Ayuda">❓</button>
+  </div>
+
+  <!-- 1. EMOCIÓN -->
+  <section class="pantalla on" id="inicio">
+    <div class="pregunta">¿Cómo estás?</div>
+    <div class="rejilla">
+      <button class="boton" onclick="sentir('tenso')"><span class="e">😣</span>Tenso</button>
+      <button class="boton" onclick="sentir('nervioso')"><span class="e">😰</span>Nervioso</button>
+      <button class="boton" onclick="sentir('cansado')"><span class="e">😴</span>Cansado</button>
+      <button class="boton" onclick="sentir('triste')"><span class="e">😢</span>Triste</button>
+      <button class="boton" onclick="sentir('bloqueado')"><span class="e">🤯</span>Bloqueado</button>
+      <button class="boton" onclick="sentir('bien')"><span class="e">🙂</span>Bien</button>
+    </div>
+    <div class="pie">No pedimos tu nombre. No guardamos nada.<br>Recurso escolar de Los Galácticos (UCSM). No es terapia.</div>
+  </section>
+
+  <!-- 2. PLAN SEGÚN LA EMOCIÓN -->
+  <section class="pantalla" id="plan">
+    <div class="gigante" id="plan-e" style="text-align:center;font-size:80px">😣</div>
+    <div class="pregunta" id="plan-t"></div>
+    <div class="bajada" id="plan-b"></div>
+    <div id="plan-lista"></div>
+  </section>
+
+  <!-- 3. PREPARAR RESPIRACIÓN -->
+  <section class="pantalla" id="preparar">
+    <div class="pregunta" id="prep-t">🎈 Respirar</div>
+    <div class="bajada">¿Con qué te ayudas?</div>
+    <div class="rejilla tres" id="ayudantes">
+      <button class="boton sel" data-a="globo" onclick="ayudante(this)"><span class="e">🎈</span>Globo</button>
+      <button class="boton" data-a="mano" onclick="ayudante(this)"><span class="e">✋</span>Mano</button>
+      <button class="boton" data-a="cuentas" onclick="ayudante(this)"><span class="e">📿</span>Cuentas</button>
+      <button class="boton" data-a="reloj" onclick="ayudante(this)"><span class="e">⏳</span>Arena</button>
+      <button class="boton" data-a="pelota" onclick="ayudante(this)"><span class="e">⚽</span>Pelotita</button>
+      <button class="boton" data-a="solo" onclick="ayudante(this)"><span class="e">👀</span>Solo mirar</button>
+    </div>
+    <div class="bajada" style="margin-top:14px">⏱️ ¿Cuánto?</div>
+    <div class="rejilla tres" id="tiempos">
+      <button class="boton sel" data-t="60" onclick="tiempo(this)" style="min-height:80px"><span class="e" style="font-size:34px">1</span>min</button>
+      <button class="boton" data-t="120" onclick="tiempo(this)" style="min-height:80px"><span class="e" style="font-size:34px">2</span>min</button>
+      <button class="boton" data-t="180" onclick="tiempo(this)" style="min-height:80px"><span class="e" style="font-size:34px">3</span>min</button>
+    </div>
+    <button class="ir" onclick="respirar()"><span class="e">▶️</span>¡Vamos!</button>
+  </section>
+
+  <!-- 4. RESPIRAR -->
+  <section class="pantalla" id="respirar">
+    <div class="escena">
+      <div class="globo" id="globo">🎈</div>
+      <div class="orden" id="orden"></div>
+      <div class="numero" id="numero"></div>
+      <div id="extra"></div>
+    </div>
+    <div class="progreso"><div id="barra"></div></div>
+    <button class="ir sec" onclick="terminar()">⏹️ Terminar</button>
+  </section>
+
+  <!-- 5. GUIADA: soltar tensión / moverse -->
+  <section class="pantalla" id="guiada">
+    <div class="pregunta" id="g-t"></div>
+    <div class="escena">
+      <div class="gigante" id="g-e"></div>
+      <div class="orden" id="g-o"></div>
+      <div class="numero" id="g-n"></div>
+    </div>
+    <div class="progreso"><div id="g-barra"></div></div>
+    <button class="ir sec" onclick="terminar()">⏹️ Terminar</button>
+  </section>
+
+  <!-- 6. SENTIDOS 5-4-3-2-1 -->
+  <section class="pantalla" id="sentidos">
+    <div class="pregunta">🖐️ Vuelve al presente</div>
+    <div class="escena">
+      <div class="gigante" id="s-e">👀</div>
+      <div class="orden" id="s-o"></div>
+      <div class="puntos" id="s-p"></div>
+      <div class="bajada">Toca un círculo por cada cosa</div>
+    </div>
+  </section>
+
+  <!-- 7. ORDENAR -->
+  <section class="pantalla" id="ordenar">
+    <div class="pregunta">📝 Solo 3 cosas</div>
+    <input placeholder="1️⃣ Lo más urgente">
+    <input placeholder="2️⃣ Después">
+    <input placeholder="3️⃣ Si hay tiempo">
+    <div class="aviso"><span class="e">🍅</span>Haz solo la 1️⃣ por 25 minutos. Luego descansa 5.</div>
+    <button class="ir" onclick="tomate()"><span class="e">🍅</span>Empezar 25 min</button>
+    <button class="ir sec" onclick="ir('final')">✅ Ya está</button>
+  </section>
+
+  <!-- 8. TOMATE (temporizador de estudio) -->
+  <section class="pantalla" id="tomate">
+    <div class="escena">
+      <div class="gigante">🍅</div>
+      <div class="orden">📚 Estudia la 1️⃣</div>
+      <div class="numero" id="tom-n">25:00</div>
+      <div class="bajada">Deja el celular boca abajo 📵</div>
+    </div>
+    <div class="progreso"><div id="tom-barra"></div></div>
+    <button class="ir sec" onclick="terminar()">⏹️ Terminar</button>
+  </section>
+
+  <!-- 9. ÁNIMO -->
+  <section class="pantalla" id="animo">
+    <div class="pregunta">💛 Un momento para ti</div>
+    <div class="frase" id="frase"></div>
+    <button class="ir sec" onclick="otraFrase()">🔄 Otra frase</button>
+    <div class="aviso"><span class="e">🤝</span>Hablar ayuda. Escribe o llama a alguien de confianza.</div>
+    <div class="aviso"><span class="e">📞</span>En Perú: Línea 113, opción 5 (salud mental, gratuita).</div>
+    <button class="ir" onclick="ir('final')"><span class="e">✅</span>Listo</button>
+  </section>
+
+  <!-- 10. FINAL -->
+  <section class="pantalla" id="final">
+    <div class="pregunta">¿Y ahora?</div>
+    <div class="rejilla tres">
+      <button class="boton" onclick="fin('peor')"><span class="e">😟</span>Peor</button>
+      <button class="boton" onclick="fin('igual')"><span class="e">😐</span>Igual</button>
+      <button class="boton" onclick="fin('mejor')"><span class="e">😊</span>Mejor</button>
+    </div>
+    <div id="msg"></div>
+    <button class="ir" onclick="ir('inicio')"><span class="e">📚</span>A estudiar</button>
+  </section>
+
+  <!-- AYUDA -->
+  <section class="pantalla" id="ayuda">
+    <div class="pregunta">¿Cómo se usa?</div>
+    <div class="pasos">
+      <div class="paso"><span class="e">👆</span>Toca cómo estás</div>
+      <div class="paso"><span class="e">⭐</span>Haz lo recomendado</div>
+      <div class="paso"><span class="e">⬆️👃</span>Toma aire</div>
+      <div class="paso"><span class="e">⬇️💨</span>Suelta aire</div>
+      <div class="paso"><span class="e">🔊 📳</span>Sonido y vibración: arriba</div>
+      <div class="paso"><span class="e">😊</span>Di cómo quedaste</div>
+    </div>
+    <div class="aviso"><span class="e">⚠️</span>Si te mareas, respira normal.</div>
+    <div class="aviso"><span class="e">📱</span>La vibración funciona en Android.</div>
+  </section>
+</div>
+
+<script>
+/* ---------------- datos ---------------- */
+const RITMOS = {
+  respirar:{t:'🎈 Respirar 4–6', f:[{o:'in',d:4},{o:'out',d:6}]},                               // 6 respiraciones por minuto
+  suspiro: {t:'😮‍💨 Suspiro', f:[{o:'in',d:2.5},{o:'in2',d:1},{o:'outb',d:6}]},                 // dos inhalaciones y exhalación larga
+  caja:    {t:'🟦 Respiración caja', f:[{o:'in',d:4},{o:'hold',d:4},{o:'out',d:4},{o:'hold',d:4}]}  // para concentrarse
+};
+const ACT = {
+  soltar:  ['💪','Soltar tensión','Aprieta y suelta (1 min)'],
+  respirar:['🎈','Respirar 4–6','Globo, mano, cuentas…'],
+  suspiro: ['😮‍💨','Suspiro','Dos tomas de aire, una salida larga'],
+  caja:    ['🟦','Respiración caja','4 · 4 · 4 · 4 para enfocarte'],
+  sentidos:['🖐️','5 sentidos','Vuelve al presente'],
+  mover:   ['🤸','Moverme','Despierta el cuerpo (2 min)'],
+  ordenar: ['📝','Ordenar','3 cosas y 25 min de estudio'],
+  animo:   ['💛','Palabras amables','Y a quién acudir']
+};
+const PLAN = {
+  tenso:    ['😣','Soltemos la tensión','Tu cuerpo está apretado.',['soltar','respirar','mover']],
+  nervioso: ['😰','Calmemos los nervios','Primero el aire, luego la mente.',['suspiro','sentidos','respirar']],
+  cansado:  ['😴','Recarguemos energía','Muévete un poco y enfócate.',['mover','caja']],
+  triste:   ['😢','Un momento para ti','Está bien sentirse así.',['animo','respirar']],
+  bloqueado:['🤯','Empecemos por algo pequeño','Una cosa a la vez.',['ordenar','caja','sentidos']],
+  bien:     ['🙂','¡Aprovecha!','Ordena y estudia con foco.',['ordenar','caja']]
+};
+const SOLTAR = [['✊','Aprieta los puños',5,'tensa'],['🖐️','Suelta',10,'suelta'],['🤷','Sube los hombros',5,'tensa'],['😌','Suéltalos',10,'suelta'],['😖','Arruga la cara',5,'tensa'],['🙂','Suelta',10,'suelta']];
+const MOVER  = [['🙆','Estira los brazos',30],['🔄','Gira los hombros',30],['🦶','Marcha en tu sitio',30],['💧','Toma agua',30]];
+const SENTIDOS = [['👀','Mira 5 cosas',5],['✋','Toca 4 cosas',4],['👂','Escucha 3 sonidos',3],['👃','Huele 2 cosas',2],['😮‍💨','Respira 1 vez profundo',1]];
+const FRASES = [['🌱','Estás haciendo lo que puedes, y eso cuenta.'],['🌤️','Este momento difícil va a pasar.'],['🧩','No tienes que resolverlo todo hoy.'],['🤗','Puedes pedir ayuda. No estás solo.'],['⭐','Un paso pequeño también es avanzar.']];
+const DEDOS = [[60,150,210],[110,70,190],[155,50,185],[200,62,188],[240,95,195]];
+
+let ESTADO = {son:false, vib:false}, aya='globo', dur=60, ritmo='respirar', timers=[], audio=null, fr=0;
+
+/* ---------------- utilidades ---------------- */
+function limpiar(){ timers.forEach(t=>{clearInterval(t);clearTimeout(t)}); timers=[]; try{navigator.vibrate&&navigator.vibrate(0)}catch(e){} }
+function ir(id){ limpiar(); document.querySelectorAll('.pantalla').forEach(p=>p.classList.remove('on')); document.getElementById(id).classList.add('on'); scrollTo(0,0); if(id==='final') document.getElementById('msg').innerHTML=''; }
+function terminar(){ ir('final'); }
+function alternar(k){
+  ESTADO[k]=!ESTADO[k]; const b=document.getElementById('t-'+k);
+  b.classList.toggle('on',ESTADO[k]);
+  b.firstChild.textContent = k==='son' ? (ESTADO.son?'🔊':'🔇') : (ESTADO.vib?'📳':'📴');
+  b.querySelector('.marca').textContent = ESTADO[k]?'✔':'✖';
+  if(k==='son'&&ESTADO.son){ ctx(); campana(); }
+  if(k==='vib'&&ESTADO.vib) vibrar([200]);
+}
+function ctx(){ try{ audio=audio||new (window.AudioContext||window.webkitAudioContext)(); if(audio.state==='suspended') audio.resume(); }catch(e){} return audio; }
+function vibrar(p){ if(!ESTADO.vib) return; try{ navigator.vibrate(p); }catch(e){} }
+function tono(f0,f1,d,vol){
+  if(!ESTADO.son||!ctx()) return;
+  const t=audio.currentTime,o=audio.createOscillator(),g=audio.createGain(); o.type='sine';
+  o.frequency.setValueAtTime(f0,t); o.frequency.linearRampToValueAtTime(f1,t+d);
+  g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(vol||.07,t+.3); g.gain.linearRampToValueAtTime(0,t+d);
+  o.connect(g).connect(audio.destination); o.start(t); o.stop(t+d+.05);
+}
+function campana(){ tono(660,660,.6,.08); }
+function seña(o,d){
+  if(o==='in'||o==='in2'){ tono(220,330,d); vibrar([400]); }
+  else if(o==='out'||o==='outb'){ tono(330,220,d); vibrar([120,180,120,180,120]); }
+  else { tono(275,275,d,.02); vibrar([60]); }
+}
+function marcar(g,b){ document.querySelectorAll('#'+g+' .boton').forEach(x=>x.classList.remove('sel')); b.classList.add('sel'); }
+function ayudante(b){ aya=b.dataset.a; marcar('ayudantes',b); }
+function tiempo(b){ dur=+b.dataset.t; marcar('tiempos',b); }
+function cuentaAtras(seg, alTick, alFin){ let s=seg; alTick(s); timers.push(setInterval(()=>{ s--; alTick(s); if(s<=0){ limpiar(); alFin(); } },1000)); }
+
+/* ---------------- plan por emoción ---------------- */
+function sentir(e){
+  const [emo,tit,baj,acts]=PLAN[e];
+  document.getElementById('plan-e').textContent=emo;
+  document.getElementById('plan-t').textContent=tit;
+  document.getElementById('plan-b').textContent=baj;
+  const l=document.getElementById('plan-lista'); l.innerHTML='';
+  acts.forEach((a,i)=>{ const [ic,nom,sub]=ACT[a]; const b=document.createElement('button');
+    b.className='boton act'+(i===0?' top':'');
+    b.innerHTML=`<span class="e">${ic}</span><span>${i===0?'<span class="estrella">⭐ Recomendado</span><br>':''}${nom}<small>${sub}</small></span>`;
+    b.onclick=()=>abrir(a); l.appendChild(b); });
+  ir('plan');
+}
+function abrir(a){
+  if(RITMOS[a]){ ritmo=a; document.getElementById('prep-t').textContent=RITMOS[a].t; ir('preparar'); }
+  else if(a==='soltar') guiada('💪 Soltar tensión',SOLTAR);
+  else if(a==='mover') guiada('🤸 Moverme',MOVER);
+  else if(a==='sentidos') sentidos();
+  else if(a==='ordenar') ir('ordenar');
+  else if(a==='animo'){ fr=0; pintarFrase(); ir('animo'); }
+}
+
+/* ---------------- respiración ---------------- */
+function dibujarAyudante(){
+  const ex=document.getElementById('extra'), gl=document.getElementById('globo');
+  gl.style.display='flex'; ex.innerHTML='';
+  gl.textContent={globo:'🎈',pelota:'⚽',cuentas:'📿',reloj:'⏳',mano:'✋',solo:'🌌'}[aya];
+  if(aya==='mano'){ gl.style.display='none';
+    let s='<svg width="280" height="240" viewBox="0 0 300 250" aria-hidden="true"><rect x="80" y="150" width="190" height="95" rx="45" fill="#1f2b5c" stroke="#8fd3ff" stroke-width="5"/>';
+    DEDOS.forEach(([x,top,base])=>s+=`<rect x="${x-17}" y="${top}" width="34" height="${base-top+40}" rx="17" fill="#1f2b5c" stroke="#8fd3ff" stroke-width="5"/>`);
+    ex.innerHTML=s+'<circle id="punto" cx="60" cy="210" r="15" fill="#ffd166"/></svg>'; }
+  if(aya==='cuentas') ex.innerHTML='<div class="cuentas">'+'<div class="cuenta"></div>'.repeat(Math.min(12,Math.round(dur/10)))+'</div>';
+  if(aya==='reloj') ex.innerHTML='<div class="reloj"><div class="marco"></div><div class="arriba" id="ar1"></div><div class="abajo" id="ar2"></div></div>';
+  if(aya==='pelota') ex.innerHTML='<div class="bajada">Aprieta al tomar aire · suelta al soltarlo</div>';
+}
+function respirar(){
+  ir('respirar'); dibujarAyudante();
+  const fases=RITMOS[ritmo].f, gl=document.getElementById('globo'), orden=document.getElementById('orden'), num=document.getElementById('numero');
+  const TXT={in:['⬆️👃','Toma aire'],in2:['⬆️👃','Un poco más'],out:['⬇️💨','Suelta aire'],outb:['⬇️👄','Suelta por la boca'],hold:['⏸️','Aguanta']};
+  const ESC={in:1.12,in2:1.25,out:.75,outb:.75,hold:null};
+  let i=0,vuelta=0,pasado=0,esc=.75;
+  function fase(){
+    const f=fases[i],[e,t]=TXT[f.o];
+    orden.innerHTML=`<span class="e">${e}</span><span>${t}</span>`;
+    if(ESC[f.o]) esc=ESC[f.o];
+    gl.style.transitionDuration=f.d+'s'; gl.style.transform='scale('+esc+')';
+    seña(f.o,f.d);
+    let n=Math.round(f.d); num.textContent=n;
+    const c=setInterval(()=>{ n--; num.textContent=n>0?n:''; },1000); timers.push(c);
+    if(aya==='mano'&&f.o!=='hold'){ const [x,top,base]=DEDOS[vuelta%5],p=document.getElementById('punto');
+      p.style.transition='cy '+f.d+'s ease-in-out'; if(f.o==='in') p.setAttribute('cx',x); p.setAttribute('cy',f.o.startsWith('out')?base:top+16); }
+    timers.push(setTimeout(()=>{ clearInterval(c);
+      if(i===fases.length-1){ vuelta++; const k=document.querySelectorAll('.cuenta')[vuelta-1]; if(k) k.classList.add('ok'); }
+      i=(i+1)%fases.length; fase(); },f.d*1000));
+  }
+  fase();
+  timers.push(setInterval(()=>{ pasado++; const r=Math.min(1,pasado/dur);
+    document.getElementById('barra').style.width=(r*100)+'%';
+    if(aya==='reloj'){ document.getElementById('ar1').style.height=(58*(1-r))+'px'; document.getElementById('ar2').style.height=(58*r)+'px'; }
+    if(pasado>=dur){ campana(); ir('final'); } },1000));
+}
+
+/* ---------------- actividades guiadas ---------------- */
+function guiada(titulo,pasos){
+  ir('guiada'); document.getElementById('g-t').textContent=titulo;
+  const total=pasos.reduce((a,p)=>a+p[2],0); let k=0,pasado=0;
+  function paso(){
+    if(k>=pasos.length){ campana(); ir('final'); return; }
+    const [e,t,d,tipo]=pasos[k];
+    document.getElementById('g-e').textContent=e;
+    document.getElementById('g-o').innerHTML=`<span>${t}</span>`;
+    campana(); vibrar(tipo==='tensa'?[500]:[150,150,150]);
+    let n=d; document.getElementById('g-n').textContent=n;
+    const c=setInterval(()=>{ n--; pasado++; document.getElementById('g-n').textContent=n>0?n:'';
+      document.getElementById('g-barra').style.width=(pasado/total*100)+'%';
+      if(n<=0){ clearInterval(c); k++; paso(); } },1000); timers.push(c);
+  }
+  document.getElementById('g-barra').style.width='0%'; paso();
+}
+function sentidos(){
+  ir('sentidos'); let k=0;
+  function paso(){
+    if(k>=SENTIDOS.length){ campana(); ir('final'); return; }
+    const [e,t,n]=SENTIDOS[k];
+    document.getElementById('s-e').textContent=e;
+    document.getElementById('s-o').textContent=t;
+    const p=document.getElementById('s-p'); p.innerHTML='';
+    for(let j=0;j<n;j++){ const d=document.createElement('button'); d.className='punto'; d.setAttribute('aria-label','Listo');
+      d.onclick=()=>{ if(d.classList.contains('ok')) return; d.classList.add('ok'); tono(440+j*60,440+j*60,.25,.06); vibrar([80]);
+        if(p.querySelectorAll('.ok').length===n){ k++; setTimeout(paso,600); } }; p.appendChild(d); }
+  }
+  paso();
+}
+function tomate(){
+  ir('tomate'); const T=25*60;
+  cuentaAtras(T,s=>{ document.getElementById('tom-n').textContent=Math.floor(s/60)+':'+String(s%60).padStart(2,'0');
+    document.getElementById('tom-barra').style.width=((T-s)/T*100)+'%'; },()=>{ campana(); vibrar([400,200,400]); ir('final'); });
+}
+function pintarFrase(){ const [e,t]=FRASES[fr%FRASES.length]; document.getElementById('frase').innerHTML=`<span class="e">${e}</span>${t}`; }
+function otraFrase(){ fr++; pintarFrase(); campana(); }
+
+/* ---------------- cierre ---------------- */
+function fin(v){
+  const m=document.getElementById('msg');
+  m.innerHTML = v==='mejor' ? '<div class="aviso"><span class="e">🌟</span>¡Muy bien! Vuelve a estudiar con calma.</div>' :
+    v==='igual' ? '<div class="aviso"><span class="e">🔁</span>Prueba otra actividad o repítela.</div>' :
+    '<div class="aviso"><span class="e">🤝</span>Habla con alguien de confianza o con el servicio de bienestar de tu universidad.</div><div class="aviso"><span class="e">📞</span>En Perú: Línea 113, opción 5.</div>';
+}
+</script>
+</body>
+</html>
